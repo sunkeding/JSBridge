@@ -1,0 +1,88 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    * {
+      font-size: 20px;
+    }
+  </style>
+  <script>
+
+        function disp_alert(text){
+            var result=alert(text)
+            console.log("result:"+result)
+            //window.alert("result:"+result)
+        }
+        function disp_confirm(text){
+            var result=confirm(text)
+             console.log("result:"+result)
+            //window.alert("result:"+result)
+        }
+        function disp_prompt(text,defaultText){
+            var result=prompt(text,defaultText)
+             console.log("result:"+result)
+            //window.alert("result:"+result)
+        }
+
+    let id = 1
+    let callbackMap = {}
+    window.JSSDK = {
+      // 获取 Native 端输入框的值
+      getNativeEditTextValue(callback) {
+        const callbackId = id++
+        callbackMap[callbackId] = callback
+        NativeBridge.getNativeEditTextValue(callbackId)
+      },
+      // 接收 Native 端传过来的消息
+      receivedMessage (callbackId, value) {
+        if (typeof callbackMap[callbackId] === 'function') {
+          callbackMap[callbackId](value)
+        }
+      }
+    }
+
+    function getWebEditTextValue (callbackId) {
+      const editText = document.querySelector('#editText');
+      const value = editText.value
+      NativeBridge.receivedMessage(callbackId, value)
+    }
+
+    window.showWebDialog = text => window.alert(text);
+    document.addEventListener('DOMContentLoaded', e => {
+      const editText = document.querySelector('#editText');
+      const showBtn = document.querySelector('#showBtn');
+      showBtn.addEventListener('click', e => {
+        const inputValue = editText.value;
+        showNativeDialog(inputValue)
+      })
+
+      const showBtn2 = document.querySelector('#showBtn2')
+      showBtn2.addEventListener('click', e => {
+        JSSDK.getNativeEditTextValue(value => window.alert('Native 输入框值：' + value))
+      })
+    })
+
+    function showNativeDialog (text) {
+      // window.alert('jsbridge://showNativeDialog?text=' + text);
+      window.NativeBridge.showNativeDialog(text);
+    }
+  </script>
+</head>
+<body>
+<input type="button" value="js调用alert" onclick="disp_alert('hello')">
+<input type="button" value="js调用confirm" onclick="disp_confirm('hello')">
+<input type="button" value="js调用prompt" onclick="disp_prompt('hello','world')">
+  <div>
+    <input id="editText" type="text" placeholder="输入内容" />
+  </div>
+  <div>
+    <button id="showBtn">显示Native弹窗</button>
+  </div>
+  <div>
+    <button id="showBtn2">获取Native输入</button>
+  </div>
+</body>
+</html>
